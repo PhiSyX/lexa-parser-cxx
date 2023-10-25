@@ -12,23 +12,40 @@
 
 template<typename T>
 Parser<T>::Parser(std::string source)
-	: source(std::move(source))
-	, current_idx(0ULL)
+	: m_source(std::move(source))
+	, m_current_idx(0ULL)
 {
 }
 
 template<typename T>
 auto
-Parser<T>::advance_as_long_as_possible(Parser<T>::PredicateParser& predicate) -> std::string
+Parser<T>::advance(const std::string& input) -> std::string
 {
 	consume_whitespace();
 
 	std::string output;
 
-	while (!is_eof() && !peek_next(predicate)) 
+	while (!is_eof() && !is_peek_until(input)) 
 	{
-		output += source[current_idx];
-		increment_idx();
+		output.push_back(m_source.at(m_current_idx));
+		increment_current_idx();
+	}
+
+	return output;
+}
+
+template<typename T>
+auto
+Parser<T>::advance(Parser<T>::PredicateParser& predicate) -> std::string
+{
+	consume_whitespace();
+
+	std::string output;
+
+	while (!is_eof() && !is_peek_until(predicate)) 
+	{
+		output.push_back(m_source.at(m_current_idx));
+		increment_current_idx();
 	}
 
 	return output;
@@ -36,48 +53,54 @@ Parser<T>::advance_as_long_as_possible(Parser<T>::PredicateParser& predicate) ->
 
 template <typename T>
 void
-Parser<T>::consume_next(const std::string& input) 
+Parser<T>::consume_until(const std::string& input) 
 {
-	assert(peek_next(input));
-	increment_idx(input.length());
+	assert(is_peek_until(input));
+	increment_current_idx(input.length());
 }
 
 template <typename T>
 void
-Parser<T>::consume_whitespace(const std::string& input) 
+Parser<T>::consume_whitespace() 
 {
-	while (std::isspace(source[current_idx])) 
+	while (std::isspace(m_source.at(m_current_idx))) 
 	{
-		increment_idx();
+		increment_current_idx();
 	}
+}
 
-	consume_next(input);
+template <typename T>
+void
+Parser<T>::consume_whitespace_and(const std::string& input) 
+{
+	consume_whitespace();
+	consume_until(input);
 }
 
 template <typename T>
 void 
-Parser<T>::increment_idx(uint64_t distance) 
+Parser<T>::increment_current_idx(uint64_t distance) 
 {
-	current_idx += distance;
+	m_current_idx += distance;
 }
 
 template <typename T>
 auto
 Parser<T>::is_eof() const -> bool
 {
-	return current_idx >= source.length();
+	return m_current_idx >= m_source.length();
 }
 
 template <typename T>
 auto
-Parser<T>::peek_next(const std::string& input) const -> bool 
+Parser<T>::is_peek_until(const std::string& input) const -> bool 
 {
-	return program.rfind(input, current_idx) == current_idx;
+	return m_source.rfind(input, m_current_idx) == m_current_idx;
 }
 
 template <typename T>
 auto
-Parser<T>::peek_next(const Parser<T>::PredicateParser& predicate) const -> bool 
+Parser<T>::is_peek_until(const Parser<T>::PredicateParser& predicate) const -> bool 
 {
-	return predicate(source[current_idx]);
+	return predicate(m_source.at(m_current_idx));
 }

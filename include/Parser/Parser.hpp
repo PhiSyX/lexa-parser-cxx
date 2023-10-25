@@ -35,29 +35,43 @@ class Parser
 		using PredicateParser = std::function<bool(char)> const;
 
 		/**
-		 * Avance dans le code source jusqu'à ce que le prédicat soit satisfait.
+		 * Avance dans le code source jusqu'au caractères donnés et retourne
+		 * une chaîne construite.
+		 *
+		 * @param input
+		 * @return string
+		 */
+		auto advance(const std::string& input) -> std::string;
+		/**
+		 * Avance dans le code source tant que le prédicat est satisfait.
 		 * 
-		 * @param predicate quand arrêter l'avancé du programme.
+		 * @param predicate
 		 * @return séquence de chaîne de caractères 
 		 */
-		auto advance_as_long_as_possible(PredicateParser& predicate) -> std::string;
+		auto advance(PredicateParser& predicate) -> std::string;
 
 		/**
-		 * Consomme les prochains caractères.
+		 * Consomme la source jusqu'au caractères donnés.
+		 *
+		 * @param input
 		 */
-		void consume_next(const std::string& input);
+		void consume_until(const std::string& input);
 
 		/**
 		 * Consomme tous les espaces blancs.
 		 */
-		void consume_whitespace(const std::string& input = "");
+		void consume_whitespace();
+		/**
+		 * Consomme tous les espaces blancs et les caractères donnés.
+		 */
+		void consume_whitespace_and(const std::string& input);
 
 		/**
 		 * Incrémente l'index courant d'une certaine distance.
 		 * 
 		 * @param distance 
 		 */
-		void increment_idx(uint64_t distance = 1);
+		void increment_current_idx(uint64_t distance = 1);
 
 		/**
 		 * Vérifie si le code source est entièrement lu.
@@ -67,19 +81,21 @@ class Parser
 		auto is_eof() const -> bool;
 
 		/**
-         * Le prochain élément de la source. Ne CONSOMME PAS la source.
-         * Autrement dit, la valeur de retour du prochain appel à la fonction
-         * [`Parser::consume_next`] DOIT être la valeur de retour de cette
-         * fonction.
+         * @return retourne true si les prochains caractères que l'on rencontre
+         * sont équivalents à la chaîne donné, false sinon.
 		 */
         [[nodiscard]]
-        auto peek_next(const std::string& input) const -> bool;
+        auto is_peek_until(const std::string& input) const -> bool;
+		/**
+         * @return retourne true si les prochains caractères que l'on rencontre
+         * remplissent le prédicat donné, false sinon.
+		 */
         [[nodiscard]]
-        auto peek_next(const PredicateParser& predicate) const -> bool;
+        auto is_peek_until(const PredicateParser& predicate) const -> bool;
 
     private:
-        std::string source;
-        uint64_t current_idx;
+        std::string m_source;
+        uint64_t m_current_idx;
 };
 
-#endif
+#endif // LEXA_PARSER_HPP
